@@ -16,6 +16,7 @@ import MuiDialogContent from "@material-ui/core/DialogContent";
 import MuiDialogActions from "@material-ui/core/DialogActions";
 import { withStyles } from "@material-ui/core/styles";
 import axios from "axios";
+import moment from 'moment'
 
 const styles = (theme) => ({
   root: {
@@ -68,7 +69,7 @@ function Alert(props) {
 
 export default function AddEmployee(props) {
   const { open, onClose } = props;
-  const { register, handleSubmit, errors } = useForm();
+  const { register, handleSubmit, errors, watch } = useForm();
   const [open1, setOpen1] = React.useState(false);
   const [image, setImage] = React.useState();
 
@@ -96,19 +97,33 @@ const getBase64 = (file) => {
     });
   }
   const onSubmit = (data) => {
-    const details = {
-      employee_name: data.employee_name,
-      employee_code: data.employee_code,
-      monthly_salary: data.monthly_salary,
-      yearly_salary: data.monthly_salary * 12,
-      employee_image: image,
-      birthdate: data.birthdate,
-      employee_license_date: data.employee_license_date,
-    };
-    axios.post("http://localhost:3004/user", details).then((res) => {
-        console.log(res.data);
-        setOpen1(true);
-      });
+    let today = new Date();
+    let today1 = moment(today)
+    let bdate =  new Date(data.birthdate)
+    let bdate1 =  moment(bdate)
+ const diffrence = today1.diff(bdate1, 'year')
+    
+ if (diffrence < 18) {
+   alert("No Eligible for License");
+   window.location.reload(false)
+ } else {
+  const details = {
+    employee_name: data.employee_name,
+    employee_code: data.employee_code,
+    monthly_salary: data.monthly_salary,
+    yearly_salary: data.monthly_salary * 12,
+    employee_image: image,
+    birthdate: data.birthdate,
+    employee_license_date: data.employee_license_date,
+  };
+  axios.post("http://localhost:3004/user", details).then((res) => {
+      console.log(res.data);
+      // setOpen1(true);
+    });
+ }
+    
+  
+   
   };
   return (
     <div>
@@ -218,6 +233,9 @@ const getBase64 = (file) => {
                   }}
                   inputRef={register({
                     required: "This Field is required.",
+                    validate: (value) =>
+                      value > watch("birthdate") ||
+                      "License Date should be grater then bithdate",
                   })}
                   error={Boolean(errors.employee_license_date)}
                   helperText={errors.employee_license_date?.message}

@@ -17,6 +17,7 @@ import MuiDialogContent from "@material-ui/core/DialogContent";
 import MuiDialogActions from "@material-ui/core/DialogActions";
 import { withStyles } from "@material-ui/core/styles";
 import axios from "axios";
+import moment from 'moment'
 
 const styles = (theme) => ({
   root: {
@@ -69,7 +70,7 @@ function Alert(props) {
 
 export default function UpdateEmployee(props) {
   const { open, onClose , id} = props;
-  const { register, handleSubmit, errors } = useForm();
+  const { register, handleSubmit, errors , watch} = useForm();
   const [open1, setOpen1] = React.useState(false);
   const [image, setImage] = React.useState();
   const [EmpName, setEmpName] = React.useState();
@@ -117,6 +118,15 @@ const getBase64 = (file) => {
     });
   }
   const onSubmit = (data) => {
+    let today = new Date();
+    let today1 = moment(today)
+    let bdate =  new Date(data.birthdate)
+    let bdate1 =  moment(bdate)
+ const diffrence = today1.diff(bdate1, 'year')
+ if (diffrence < 18) {
+  alert("No Eligible for License");
+  window.location.reload(false)
+} else {
     const details = {
       employee_name: data.employee_name,
       employee_code: data.employee_code,
@@ -130,6 +140,7 @@ const getBase64 = (file) => {
         console.log(res.data);
         setOpen1(true);
       });
+    }
   };
   return (
     <div>
@@ -258,6 +269,9 @@ const getBase64 = (file) => {
                   onChange={(e)=>setEmpLicensedate(e.target.value)}
                   inputRef={register({
                     required: "This Field is required.",
+                    validate: (value) =>
+                      value > watch("birthdate") ||
+                      "License Date should be grater then bithdate",
                   })}
                   error={Boolean(errors.employee_license_date)}
                   helperText={errors.employee_license_date?.message}
